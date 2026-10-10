@@ -253,6 +253,13 @@ jobs:
 
           sed -i "s/__SELECTED_VARIANT__/$VARIANT/" "$DIR/game.js"
 
+          # Ensure today's folder contains runnable, self-contained files.
+          # Fail early if any generated file is missing.
+          test -s "$DIR/index.html"
+          test -s "$DIR/style.css"
+          test -s "$DIR/game.js"
+          test -s "$DIR/README.md"
+
           git add "$DIR" README.md
           if git diff --cached --quiet; then
             echo "No changes to commit."
