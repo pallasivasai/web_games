@@ -251,6 +251,8 @@ jobs:
             printf '\n- [%s](./%s/) — added automatically on %s.\n' "$TITLE" "$DIR" "$DATE" >> README.md
           fi
 
+          sed -i "s/__SELECTED_VARIANT__/$VARIANT/" "$DIR/game.js"
+
           git add "$DIR" README.md
           if git diff --cached --quiet; then
             echo "No changes to commit."
