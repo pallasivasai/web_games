@@ -43,7 +43,7 @@ jobs:
           DAY_OF_YEAR="$(date -u +%j)"
           VARIANT=$((10#$DAY_OF_YEAR % 4))
 
-          # Rotate through small, self-contained HTML/CSS/JS game templates.
+          # Select a simple game template based on day-of-year (UTC).
           case "$VARIANT" in
             0) SLUG="memory-match"; TITLE="Memory Match" ;;
             1) SLUG="number-guess"; TITLE="Number Guess" ;;
