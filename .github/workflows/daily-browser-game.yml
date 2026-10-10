@@ -1,0 +1,252 @@
+name: Daily Browser Game
+
+on:
+  schedule:
+    # GitHub Actions uses UTC. 04:30 UTC = 10:00 AM IST.
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-browser-game
+  cancel-in-progress: false
+
+jobs:
+  add-game:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create one new simple game each day
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATE="$(date -u +%F)"
+          ROOT="games"
+          mkdir -p "$ROOT"
+
+          # Avoid duplicate daily folders if a scheduled run is retried.
+          if find "$ROOT" -maxdepth 1 -type d -name "$DATE-*" | grep -q .; then
+            echo "A game folder for $DATE already exists; skipping."
+            exit 0
+          fi
+
+          # Rotate through small, self-contained HTML/CSS/JS game templates.
+          DAY_OF_YEAR="$(date -u +%j)"
+          VARIANT=$((10#$DAY_OF_YEAR % 4))
+
+          case "$VARIANT" in
+            0) SLUG="memory-match"; TITLE="Memory Match" ;;
+            1) SLUG="number-guess"; TITLE="Number Guess" ;;
+            2) SLUG="reaction-timer"; TITLE="Reaction Timer" ;;
+            3) SLUG="click-counter"; TITLE="Click Counter Challenge" ;;
+          esac
+
+          DIR="$ROOT/$DATE-$SLUG"
+          mkdir -p "$DIR"
+
+          cat > "$DIR/index.html" <<HTML
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>$TITLE</title>
+            <link rel="stylesheet" href="style.css">
+          </head>
+          <body>
+            <main class="card">
+              <p class="eyebrow">DAILY WEB GAME</p>
+              <h1>$TITLE</h1>
+              <p id="instructions"></p>
+              <section class="panel">
+                <p id="status" role="status">Press Start to begin.</p>
+                <div id="play"></div>
+                <button id="start" type="button">Start game</button>
+              </section>
+              <p class="foot">Made with plain HTML, CSS and JavaScript. No libraries required.</p>
+            </main>
+            <script src="game.js"></script>
+          </body>
+          </html>
+          HTML
+
+          cat > "$DIR/style.css" <<'CSS'
+          :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#19233a;background:#f3f6fc}
+          *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px}
+          .card{width:min(580px,100%);background:white;border:1px solid #e2e8f4;border-radius:22px;padding:clamp(22px,5vw,38px);box-shadow:0 18px 50px #18294a12}
+          .eyebrow{font-size:.72rem;letter-spacing:.15em;font-weight:800;color:#4f61d5}h1{font-size:clamp(2rem,7vw,3rem);letter-spacing:-.04em;margin:.3em 0}
+          p{line-height:1.6;color:#68748a}.panel{background:#f6f8fd;border-radius:16px;padding:20px;margin-top:24px;text-align:center;min-height:170px}
+          #status{font-weight:650;min-height:28px}#play{min-height:42px;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+          button,input{font:inherit}button{border:0;border-radius:10px;background:#4b5bd5;color:white;font-weight:750;padding:12px 18px;cursor:pointer;margin-top:12px}
+          button:hover{background:#3546bd}input{width:130px;padding:10px;border:1px solid #cbd4e5;border-radius:9px}.foot{font-size:.82rem;margin-top:20px}
+          .tile{width:64px;height:54px;border:1px solid #cbd5e8;border-radius:10px;background:white;color:#202a44;margin:3px;font-size:1.25rem}
+          CSS
+
+          cat > "$DIR/game.js" <<'JS'
+          (() => {
+            const status = document.querySelector("#status");
+            const play = document.querySelector("#play");
+            const start = document.querySelector("#start");
+            const instructions = document.querySelector("#instructions");
+            let timer = null;
+            let started = 0;
+            let score = 0;
+            let active = false;
+            const variant = Number(new Date().toISOString().slice(8, 10)) % 4;
+
+            function reset() {
+              clearInterval(timer);
+              timer = null;
+              active = false;
+              score = 0;
+              play.replaceChildren();
+              start.disabled = false;
+              start.textContent = "Start game";
+            }
+            function button(label, callback, className = "") {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.textContent = label;
+              if (className) b.className = className;
+              b.addEventListener("click", callback);
+              play.appendChild(b);
+              return b;
+            }
+            function beginGuess() {
+              instructions.textContent = "Guess the hidden number from 1 to 20 in as few tries as possible.";
+              const answer = Math.floor(Math.random() * 20) + 1;
+              const input = document.createElement("input");
+              input.type = "number"; input.min = "1"; input.max = "20"; input.placeholder = "1–20";
+              input.setAttribute("aria-label", "Your guess");
+              play.append(input);
+              button("Guess", () => {
+                const n = Number(input.value);
+                if (!input.value || n < 1 || n > 20) { status.textContent = "Enter a number from 1 to 20."; return; }
+                score++;
+                if (n === answer) { status.textContent = "Correct! Guesses used: " + score; start.textContent = "Play again"; start.disabled = false; }
+                else status.textContent = n < answer ? "Too low — try again!" : "Too high — try again!";
+              });
+              status.textContent = "Find the secret number.";
+              start.disabled = true;
+              start.textContent = "Game in progress";
+              const originalStart = start;
+              button("New round", () => { reset(); beginGuess(); });
+            }
+            function beginReaction() {
+              instructions.textContent = "Wait for the panel to turn green, then click it as quickly as possible. Clicking early restarts the round.";
+              const target = document.createElement("button");
+              target.textContent = "Wait for green…";
+              target.style.minWidth = "190px";
+              target.style.background = "#68748a";
+              play.appendChild(target);
+              start.disabled = true;
+              start.textContent = "Wait…";
+              const delay = 1200 + Math.random() * 2600;
+              timer = setTimeout(() => {
+                if (!active) return;
+                started = performance.now();
+                target.textContent = "CLICK NOW!";
+                target.style.background = "#16875a";
+              }, delay);
+              active = true;
+              target.addEventListener("click", () => {
+                if (!active) return;
+                if (target.style.background !== "rgb(22, 135, 90)" && target.style.background !== "#16875a") {
+                  clearTimeout(timer); status.textContent = "Too early! Press Start to try again."; active = false; start.disabled = false; start.textContent = "Try again"; return;
+                }
+                status.textContent = "Your reaction time: " + Math.round(performance.now() - started) + " ms";
+                active = false; start.disabled = false; start.textContent = "Try again";
+              });
+            }
+            function beginCounter() {
+              instructions.textContent = "Click the button as many times as you can in 10 seconds.";
+              score = 0; let seconds = 10; active = true;
+              status.textContent = "Score: 0 | Time: 10s";
+              button("Click me!", () => { if (active) { score++; status.textContent = "Score: " + score + " | Time: " + seconds + "s"; } });
+              start.disabled = true; start.textContent = "Playing…";
+              timer = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) { clearInterval(timer); active = false; status.textContent = "Time up! Final score: " + score; start.disabled = false; start.textContent = "Play again"; }
+                else status.textContent = "Score: " + score + " | Time: " + seconds + "s";
+              }, 1000);
+            }
+            function beginMemory() {
+              instructions.textContent = "Watch the sequence, then repeat it by clicking the tiles in the same order.";
+              const sequence = Array.from({length: 4}, () => Math.floor(Math.random() * 4));
+              const tiles = [];
+              for (let i = 0; i < 4; i++) tiles.push(button(["●","▲","■","◆"][i], () => {
+                if (!active) return;
+                if (i !== sequence[score]) { status.textContent = "Not quite — press Start to try another sequence."; active = false; start.disabled = false; start.textContent = "Play again"; return; }
+                score++;
+                if (score === sequence.length) { status.textContent = "Perfect memory! You matched all 4."; active = false; start.disabled = false; start.textContent = "Play again"; }
+              }, "tile"));
+              tiles.forEach(t => t.classList.add("tile"));
+              status.textContent = "Memorize: " + sequence.map(n => ["●","▲","■","◆"][n]).join(" ");
+              start.disabled = true; start.textContent = "Sequence ready";
+              setTimeout(() => { if (active) status.textContent = "Now repeat the sequence."; }, 1800);
+              active = true; score = 0;
+            }
+            start.addEventListener("click", () => {
+              reset();
+              if (variant === 0) beginMemory();
+              else if (variant === 1) beginGuess();
+              else if (variant === 2) beginReaction();
+              else beginCounter();
+            });
+            if (variant === 0) instructions.textContent = "Repeat the hidden sequence of four symbols.";
+            else if (variant === 1) instructions.textContent = "Guess a secret number between 1 and 20.";
+            else if (variant === 2) instructions.textContent = "Test your reaction speed.";
+            else instructions.textContent = "Earn as many clicks as possible before time runs out.";
+          })();
+          JS
+
+          case "$VARIANT" in
+            0) RULES="Memorize the four symbols shown, then click the tiles in the exact sequence. A wrong tile ends the round. Match all four to win." ;;
+            1) RULES="Enter a whole number between 1 and 20. Use the too-high and too-low hints to find the secret number. Try to use as few guesses as possible." ;;
+            2) RULES="Press Start, wait for the button to turn green, and click as fast as you can. Clicking before it turns green is a false start." ;;
+            3) RULES="Press Start and click the target as many times as possible during the 10-second round. Your final click count is your score." ;;
+          esac
+
+          cat > "$DIR/README.md" <<MD
+          # $TITLE
+
+          A tiny browser game made with plain HTML, CSS, and JavaScript.
+
+          ## How to play
+          1. Open `index.html` in a modern browser.
+          2. Read the on-screen instructions.
+          3. Press **Start game** and follow the prompts.
+
+          ## Rules
+          $RULES
+
+          ## Files
+          - `index.html` — page and controls.
+          - `style.css` — responsive styling.
+          - `game.js` — game behaviour.
+          - `README.md` — instructions and rules.
+
+          No packages or build steps are needed.
+          MD
+
+          # Keep README game index up to date without rewriting it unnecessarily.
+          if ! grep -Fq "./$DIR/" README.md 2>/dev/null; then
+            printf '\n- [%s](./%s/) — added automatically on %s.\n' "$TITLE" "$DIR" "$DATE" >> README.md
+          fi
+
+          git add "$DIR" README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Add daily browser game: $TITLE ($DATE)"
+          git push
