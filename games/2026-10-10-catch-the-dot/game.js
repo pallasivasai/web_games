@@ -30,6 +30,7 @@
     hint.textContent = "Time's up! Your score: " + score;
     message.textContent = "Play again whenever you're ready.";
     startBtn.textContent = "Play again";
+    startBtn.disabled = false;
   }
 
   startBtn.addEventListener("click", () => {
@@ -40,6 +41,7 @@
     scoreEl.textContent = score;
     timeEl.textContent = timeLeft;
     startBtn.textContent = "Playing…";
+    startBtn.disabled = true;
     message.textContent = "Go! Click the dot!";
     hint.hidden = true;
     dot.hidden = false;
