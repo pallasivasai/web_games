@@ -101,7 +101,7 @@ jobs:
             let timer = null;
             let score = 0;
             let active = false;
-            const variant = Number(new Date().toISOString().slice(8, 10)) % 4;
+            const variant = ${VARIANT};
 
             function reset() {
               clearInterval(timer);
