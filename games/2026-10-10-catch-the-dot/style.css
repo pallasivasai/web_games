@@ -1,0 +1,11 @@
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f3f6fb;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px}
+.game{width:min(760px,100%);background:#fff;border:1px solid #e5eaf2;border-radius:24px;padding:clamp(20px,4vw,38px);box-shadow:0 20px 60px #15284a12}
+.eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.16em;color:#5269d8;margin:0 0 10px}
+h1{margin:0;font-size:clamp(2rem,6vw,3.3rem);letter-spacing:-.05em}.intro{color:#647087;line-height:1.6;margin:10px 0 24px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stats div{background:#f5f7fc;border-radius:14px;padding:14px}.stats span{display:block;font-size:.82rem;color:#68758d}.stats strong{display:block;font-size:1.5rem;margin-top:5px}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:20px 0}button{font:inherit}#start{border:0;border-radius:11px;background:#4456d9;color:white;padding:12px 18px;font-weight:750;cursor:pointer}#start:hover{background:#3444bd}#message{font-size:.92rem;color:#667187}
+.arena{height:300px;position:relative;overflow:hidden;border:2px dashed #d7def0;border-radius:18px;background:radial-gradient(circle at 1px 1px,#dce3f2 1px,transparent 0);background-size:20px 20px}
+.dot{position:absolute;width:42px;height:42px;border:4px solid #fff;border-radius:50%;background:#ff6b6b;box-shadow:0 5px 16px #ff6b6b66;cursor:pointer;transition:transform .08s}.dot:active{transform:scale(.88)}.dot[hidden]{display:none}.hint{position:absolute;inset:0;display:grid;place-items:center;color:#8b96aa;pointer-events:none;text-align:center;padding:20px}
+footer{margin-top:16px;color:#8a94a8;font-size:.82rem}
+@media(max-width:480px){.stats{gap:7px}.stats div{padding:10px}.arena{height:260px}.actions{align-items:flex-start;flex-direction:column}}
