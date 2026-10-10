@@ -92,7 +92,7 @@ jobs:
           .tile{width:64px;height:54px;border:1px solid #cbd5e8;border-radius:10px;background:white;color:#202a44;margin:3px;font-size:1.25rem}
           CSS
 
-          cat > "$DIR/game.js" <<'JS'
+          cat > "$DIR/game.js" <<JS
           (() => {
             const status = document.querySelector("#status");
             const play = document.querySelector("#play");
@@ -101,7 +101,7 @@ jobs:
             let timer = null;
             let score = 0;
             let active = false;
-            const variant = __SELECTED_VARIANT__;
+            const variant = ${VARIANT};
 
             function reset() {
               clearInterval(timer);
@@ -251,9 +251,7 @@ jobs:
             printf '\n- [%s](./%s/) — added automatically on %s.\n' "$TITLE" "$DIR" "$DATE" >> README.md
           fi
 
-          sed -i "s/__SELECTED_VARIANT__/$VARIANT/" "$DIR/game.js"
-
-          # Ensure today's folder contains runnable, self-contained files.
+                    # Ensure today's folder contains runnable, self-contained files.
           # Fail early if any generated file is missing.
           test -s "$DIR/index.html"
           test -s "$DIR/style.css"
