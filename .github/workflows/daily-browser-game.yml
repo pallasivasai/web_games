@@ -92,7 +92,7 @@ jobs:
           .tile{width:64px;height:54px;border:1px solid #cbd5e8;border-radius:10px;background:white;color:#202a44;margin:3px;font-size:1.25rem}
           CSS
 
-          cat > "$DIR/game.js" <<'JS'
+          cat > "$DIR/game.js" <<JS
           (() => {
             const status = document.querySelector("#status");
             const play = document.querySelector("#play");
