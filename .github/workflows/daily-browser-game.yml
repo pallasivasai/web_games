@@ -39,10 +39,11 @@ jobs:
             exit 0
           fi
 
-          # Rotate through small, self-contained HTML/CSS/JS game templates.
+          # Read UTC date at execution time so each run gets one daily folder.
           DAY_OF_YEAR="$(date -u +%j)"
           VARIANT=$((10#$DAY_OF_YEAR % 4))
 
+          # Rotate through small, self-contained HTML/CSS/JS game templates.
           case "$VARIANT" in
             0) SLUG="memory-match"; TITLE="Memory Match" ;;
             1) SLUG="number-guess"; TITLE="Number Guess" ;;
