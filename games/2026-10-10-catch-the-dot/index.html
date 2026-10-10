@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catch the Dot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game">
+    <header>
+      <p class="eyebrow">MINI BROWSER GAME</p>
+      <h1>Catch the Dot</h1>
+      <p class="intro">Click the moving dot as many times as you can in 30 seconds.</p>
+    </header>
+    <section class="stats" aria-label="Game stats">
+      <div><span>Score</span><strong id="score">0</strong></div>
+      <div><span>Time</span><strong><span id="time">30</span>s</strong></div>
+      <div><span>Best</span><strong id="best">0</strong></div>
+    </section>
+    <div class="actions">
+      <button id="start">Start game</button>
+      <span id="message" role="status">Press Start to play.</span>
+    </div>
+    <section id="arena" class="arena" aria-label="Game area">
+      <button id="dot" class="dot" aria-label="Catch the dot" hidden></button>
+      <div id="hint" class="hint">Your target will appear here</div>
+    </section>
+    <footer>Tip: keep your cursor inside the play area.</footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
