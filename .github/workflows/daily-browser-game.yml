@@ -92,7 +92,7 @@ jobs:
           .tile{width:64px;height:54px;border:1px solid #cbd5e8;border-radius:10px;background:white;color:#202a44;margin:3px;font-size:1.25rem}
           CSS
 
-          cat > "$DIR/game.js" <<JS
+          cat > "$DIR/game.js" <<'JS'
           (() => {
             const status = document.querySelector("#status");
             const play = document.querySelector("#play");
@@ -101,7 +101,7 @@ jobs:
             let timer = null;
             let score = 0;
             let active = false;
-            const variant = ${VARIANT};
+            const variant = __SELECTED_VARIANT__;
 
             function reset() {
               clearInterval(timer);
@@ -250,6 +250,8 @@ jobs:
           if ! grep -Fq "./$DIR/" README.md 2>/dev/null; then
             printf '\n- [%s](./%s/) — added automatically on %s.\n' "$TITLE" "$DIR" "$DATE" >> README.md
           fi
+
+          sed -i "s/__SELECTED_VARIANT__/$VARIANT/" "$DIR/game.js"
 
           git add "$DIR" README.md
           if git diff --cached --quiet; then
