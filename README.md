@@ -13,3 +13,5 @@ Open a game's `index.html` file in any modern browser. No installation or build 
 ## Daily updates
 
 GitHub Actions is configured to add a simple browser game folder daily. Each game includes its own instructions. Scheduled workflows may be delayed by GitHub; check the Actions tab for run status.
+
+- [Memory Match](./games/2026-10-11-memory-match/) — added automatically on 2026-10-11.
