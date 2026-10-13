@@ -1,10 +1,13 @@
 # Web Games 🎮
 
-A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a `README.md` explaining how to play, controls, and rules.
+A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a `README.md` with its rules and instructions.
 
 ## Games
 
 - [Catch the Dot](./games/2026-10-10-catch-the-dot/) — click the moving dot before time runs out.
+- [Memory Match](./games/2026-10-11-memory-match/) — memorize and repeat the symbol sequence.
+- [Number Guess](./games/2026-10-12-number-guess/) — find the secret number using higher/lower hints.
+- [Word Scramble Sprint](./games/2026-10-13-word-scramble-sprint/) — unscramble words against a 60-second timer.
 
 ## Run a game
 
@@ -12,8 +15,4 @@ Open a game's `index.html` file in any modern browser. No installation or build 
 
 ## Daily updates
 
-GitHub Actions is configured to add a simple browser game folder daily. Each game includes its own instructions. Scheduled workflows may be delayed by GitHub; check the Actions tab for run status.
-
-- [Memory Match](./games/2026-10-11-memory-match/) — added automatically on 2026-10-11.
-
-- [Number Guess](./games/2026-10-12-number-guess/) — added automatically on 2026-10-12.
+New games are added through ChatGPT's scheduled GitHub update task. Each update should use a unique game concept and include instructions in that game's `README.md`.
