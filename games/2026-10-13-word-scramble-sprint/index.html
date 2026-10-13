@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Word Scramble Sprint</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#192438;--ink:#f4f7ff;--muted:#aab7cc;--accent:#7ce7c4;--warn:#ffcc80}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top,#263956,var(--bg) 65%);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+main{width:min(100%,560px);padding:clamp(20px,5vw,36px);background:var(--panel);border:1px solid #34435b;border-radius:24px;box-shadow:0 20px 60px #0004}
+h1{margin:0;font-size:clamp(1.8rem,6vw,2.6rem);letter-spacing:-.04em}p{color:var(--muted)}.stats{display:flex;gap:12px;margin:20px 0}.stat{flex:1;padding:12px;background:#101827;border-radius:12px;text-align:center}.stat strong{display:block;font-size:1.35rem;color:var(--accent)}
+#scramble{font-size:clamp(2rem,9vw,3.5rem);letter-spacing:.16em;text-align:center;font-weight:800;margin:22px 0;color:var(--warn);overflow-wrap:anywhere}
+label{display:block;margin:12px 0 6px;font-weight:650}input{width:100%;padding:14px;border-radius:12px;border:2px solid #52617a;background:#101827;color:var(--ink);font:inherit}input:focus{outline:3px solid var(--accent);outline-offset:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}button{border:0;border-radius:12px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;background:var(--accent);color:#10231f}button.secondary{background:#34435b;color:var(--ink)}button:focus-visible{outline:3px solid white;outline-offset:3px}button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+#message{min-height:3em;margin-top:14px;color:var(--ink)}.hint{font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Word Scramble Sprint</h1>
+  <p>Unscramble as many words as you can before the 60-second timer ends.</p>
+  <div class="stats" aria-label="Game stats">
+    <div class="stat">Score<strong id="score">0</strong></div>
+    <div class="stat">Time<strong><span id="time">60</span>s</strong></div>
+    <div class="stat">Solved<strong id="solved">0</strong></div>
+  </div>
+  <div id="scramble" aria-label="Scrambled word">READY?</div>
+  <label for="answer">Your answer</label>
+  <input id="answer" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Type the word…" disabled>
+  <div class="actions">
+    <button id="start">Start game</button>
+    <button id="submit" class="secondary" disabled>Check word</button>
+    <button id="skip" class="secondary" disabled>Skip (−1 point)</button>
+  </div>
+  <p id="message" role="status" aria-live="polite">Press Start game when you're ready.</p>
+  <p class="hint">Each correct answer earns 2 points. Skipping costs 1 point. Words are case-insensitive.</p>
+</main>
+<script>
+(() => {
+  const words = ["browser","planet","garden","puzzle","silver","rocket","window","jungle","camera","thunder","pencil","bridge","cookie","magnet","forest","button","stream","orange","castle","little","dragon","marble","flight","socket","travel","winter","smooth","circle","bright","monkey"];
+  const $ = id => document.getElementById(id);
+  let remaining = 60, score = 0, solved = 0, current = "", timer = null, used = new Set();
+  const scrambleWord = word => {
+    if (word.length < 2) return word;
+    let shuffled = word;
+    for (let tries = 0; tries < 12 && shuffled === word; tries++) {
+      shuffled = word.split("").sort(() => Math.random() - .5).join("");
+    }
+    return shuffled === word ? word.slice(1) + word[0] : shuffled;
+  };
+  function nextWord() {
+    const available = words.filter(word => !used.has(word));
+    if (!available.length) used.clear();
+    const pool = words.filter(word => !used.has(word));
+    current = pool[Math.floor(Math.random() * pool.length)];
+    used.add(current);
+    $("scramble").textContent = scrambleWord(current).toUpperCase();
+    $("answer").value = "";
+    $("answer").focus();
+  }
+  function render() {
+    $("score").textContent = score;
+    $("time").textContent = remaining;
+    $("solved").textContent = solved;
+  }
+  function finish() {
+    clearInterval(timer); timer = null;
+    $("answer").disabled = $("submit").disabled = $("skip").disabled = true;
+    $("start").disabled = false;
+    $("start").textContent = "Play again";
+    $("scramble").textContent = "TIME!";
+    $("message").textContent = `Time's up! You solved ${solved} word(s) and scored ${score} point(s).`;
+  }
+  function start() {
+    clearInterval(timer); remaining = 60; score = 0; solved = 0; used.clear();
+    $("answer").disabled = $("submit").disabled = $("skip").disabled = false;
+    $("start").disabled = true; $("start").textContent = "Playing…";
+    render(); nextWord(); $("message").textContent = "Go! Type the original word and press Enter.";
+    timer = setInterval(() => { remaining--; render(); if (remaining <= 0) finish(); }, 1000);
+  }
+  function check() {
+    if (!timer) return;
+    const guess = $("answer").value.trim().toLowerCase();
+    if (!guess) { $("message").textContent = "Type a word first."; return; }
+    if (guess === current) {
+      score += 2; solved++; render();
+      $("message").textContent = "Correct! +2 points. Next word…";
+      nextWord();
+    } else {
+      $("message").textContent = "Not quite — try again!";
+      $("answer").select();
+    }
+  }
+  $("start").addEventListener("click", start);
+  $("submit").addEventListener("click", check);
+  $("answer").addEventListener("keydown", event => { if (event.key === "Enter") check(); });
+  $("skip").addEventListener("click", () => {
+    if (!timer) return;
+    score = Math.max(0, score - 1); render();
+    $("message").textContent = `Skipped! The word was “${current}”.`;
+    nextWord();
+  });
+})();
+</script>
+</body>
+</html>
