@@ -9,6 +9,10 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 - [Number Guess](./games/2026-10-12-number-guess/) — find the secret number using higher/lower hints.
 - [Word Scramble Sprint](./games/2026-10-13-word-scramble-sprint/) — unscramble words against a 60-second timer.
 
+## Game templates
+
+- [14 reusable game templates](./GAME_TEMPLATES.md) — gameplay concepts and rules for future daily games.
+
 ## Run a game
 
 Open a game's `index.html` file in any modern browser. No installation or build tools are required.
