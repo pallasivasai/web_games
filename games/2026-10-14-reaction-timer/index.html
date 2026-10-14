@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Reaction Timer — Five-Round Challenge</title>
+  <style>
+    :root { color-scheme: dark; --bg:#101827; --panel:#182438; --ink:#f4f7ff; --muted:#a9b8d0; --accent:#9b8cff; --green:#42e6a4; --red:#ff6b86; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; padding:24px; display:grid; place-items:center; background:radial-gradient(circle at top,#243554 0,var(--bg) 55%); color:var(--ink); font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif; }
+    main { width:min(760px,100%); }
+    .eyebrow { margin:0 0 8px; color:var(--green); font-size:.8rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(2rem,6vw,3.5rem); line-height:1.08; letter-spacing:-.04em; }
+    .intro { max-width:55ch; color:var(--muted); margin:14px 0 24px; }
+    .panel { background:rgba(24,36,56,.92); border:1px solid #33435e; border-radius:24px; padding:clamp(18px,4vw,30px); box-shadow:0 24px 70px #0005; }
+    .stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:18px; }
+    .stat { min-width:0; padding:12px; border-radius:14px; background:#0e1727; border:1px solid #2b3a52; }
+    .stat span { display:block; color:var(--muted); font-size:.78rem; }
+    .stat strong { display:block; margin-top:3px; font-size:clamp(1rem,3vw,1.45rem); overflow-wrap:anywhere; }
+    .arena { width:100%; min-height:235px; border:2px solid #3d4d68; border-radius:18px; background:#293750; color:var(--ink); display:grid; place-content:center; gap:6px; cursor:pointer; transition:background .15s,border-color .15s,transform .15s; }
+    .arena:focus-visible,button:focus-visible { outline:3px solid #fff; outline-offset:4px; }
+    .arena .big { display:block; font-size:clamp(1.65rem,6vw,2.7rem); font-weight:900; letter-spacing:.04em; }
+    .arena .small { display:block; font-size:.95rem; color:inherit; opacity:.85; }
+    .arena.waiting { background:#6a4c23; border-color:#f6bd60; }
+    .arena.go { background:#087a57; border-color:var(--green); color:#fff; transform:scale(.995); }
+    .arena.false { background:#812d48; border-color:var(--red); }
+    .arena.result { background:#254b68; border-color:#75c7ff; }
+    .arena.finished { background:#26334b; }
+    .message { min-height:3em; margin:16px 0; color:var(--muted); text-align:center; }
+    .actions { display:flex; justify-content:center; }
+    .start { border:0; border-radius:999px; padding:13px 25px; background:var(--accent); color:#101126; font:inherit; font-weight:850; cursor:pointer; }
+    .start:disabled { cursor:not-allowed; opacity:.55; }
+    .instructions { margin-top:22px; color:var(--muted); font-size:.92rem; }
+    .instructions h2 { color:var(--ink); font-size:1rem; margin-bottom:6px; }
+    .instructions ol { padding-left:22px; margin-bottom:0; }
+    @media (max-width:480px) { body { padding:14px; } .stats { gap:6px; } .stat { padding:9px; } .arena { min-height:205px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Reflex lab · 5 rounds</p>
+    <h1>Reaction Timer</h1>
+    <p class="intro">Wait for the panel to turn green, then tap as quickly as you can. Jumping the gun costs you that round—steady nerves win.</p>
+
+    <section class="panel" aria-label="Reaction timer game">
+      <div class="stats" aria-label="Game statistics">
+        <div class="stat"><span>Round</span><strong id="roundStat">0 / 5</strong></div>
+        <div class="stat"><span>Last result</span><strong id="lastStat">—</strong></div>
+        <div class="stat"><span>Best average</span><strong id="bestStat">—</strong></div>
+      </div>
+
+      <button class="arena" id="arena" type="button" aria-label="Reaction area. Start the challenge first.">
+        <span class="big" id="arenaBig">READY?</span>
+        <span class="small" id="arenaSmall">Press Start challenge below</span>
+      </button>
+      <p class="message" id="message" role="status" aria-live="polite">Complete five rounds to record your average reaction time.</p>
+      <div class="actions"><button class="start" id="startBtn" type="button">Start challenge</button></div>
+
+      <div class="instructions">
+        <h2>How to play</h2>
+        <ol>
+          <li>Press <strong>Start challenge</strong> and wait for each round to begin.</li>
+          <li>Do not tap while the panel is amber. Tap only when it turns green.</li>
+          <li>Finish all five rounds. False starts count as a missed round.</li>
+          <li>Your average uses only valid reactions. A lower average is better; your best average is saved on this device.</li>
+        </ol>
+        <p><strong>Controls:</strong> Click, tap, or focus the reaction panel and press Enter/Space. No install or internet connection is needed.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+      const TOTAL_ROUNDS = 5;
+      const arena = document.getElementById("arena");
+      const arenaBig = document.getElementById("arenaBig");
+      const arenaSmall = document.getElementById("arenaSmall");
+      const message = document.getElementById("message");
+      const startBtn = document.getElementById("startBtn");
+      const roundStat = document.getElementById("roundStat");
+      const lastStat = document.getElementById("lastStat");
+      const bestStat = document.getElementById("bestStat");
+
+      let state = "idle";
+      let round = 0;
+      let waitTimer = null;
+      let nextTimer = null;
+      let greenAt = 0;
+      let results = [];
+      let lastResult = "—";
+      let bestAverage = 0;
+
+      try {
+        const saved = Number(localStorage.getItem("reactionTimerBestAverage"));
+        if (Number.isFinite(saved) && saved > 0) bestAverage = saved;
+      } catch (_) { /* Storage may be disabled; the game still works. */ }
+
+      function averageReaction() {
+        const valid = results.filter(function (value) { return Number.isFinite(value); });
+        if (!valid.length) return null;
+        return Math.round(valid.reduce(function (sum, value) { return sum + value; }, 0) / valid.length);
+      }
+
+      function updateStats() {
+        roundStat.textContent = round + " / " + TOTAL_ROUNDS;
+        lastStat.textContent = lastResult;
+        bestStat.textContent = bestAverage ? bestAverage + " ms" : "—";
+      }
+
+      function setArena(kind, big, small, label) {
+        arena.className = "arena" + (kind ? " " + kind : "");
+        arenaBig.textContent = big;
+        arenaSmall.textContent = small;
+        arena.setAttribute("aria-label", label || big + ". " + small);
+      }
+
+      function clearTimers() {
+        if (waitTimer !== null) clearTimeout(waitTimer);
+        if (nextTimer !== null) clearTimeout(nextTimer);
+        waitTimer = null;
+        nextTimer = null;
+      }
+
+      function startChallenge() {
+        clearTimers();
+        round = 1;
+        results = [];
+        lastResult = "—";
+        state = "waiting";
+        startBtn.disabled = true;
+        startBtn.textContent = "Challenge in progress";
+        updateStats();
+        beginRound();
+      }
+
+      function beginRound() {
+        state = "waiting";
+        setArena("waiting", "WAIT FOR GREEN", "Stay ready…", "Waiting. Tap now only after the panel turns green.");
+        message.textContent = "Round " + round + " of " + TOTAL_ROUNDS + ": wait for green.";
+        const delay = 1500 + Math.random() * 2500;
+        waitTimer = setTimeout(function () {
+          if (state !== "waiting") return;
+          state = "go";
+          greenAt = performance.now();
+          setArena("go", "TAP NOW!", "As fast as you can", "Green signal. Tap now!");
+          message.textContent = "Go! Tap the green panel.";
+        }, delay);
+      }
+
+      function recordFalseStart() {
+        clearTimeout(waitTimer);
+        waitTimer = null;
+        results.push(null);
+        lastResult = "False start";
+        state = "feedback";
+        setArena("false", "TOO SOON!", "This round is a miss", "False start. This round counts as a miss.");
+        message.textContent = "False start—round " + round + " is a miss. Get ready for the next one.";
+        updateStats();
+        nextTimer = setTimeout(advanceRound, 950);
+      }
+
+      function recordReaction() {
+        const reaction = Math.max(0, Math.round(performance.now() - greenAt));
+        results.push(reaction);
+        lastResult = reaction + " ms";
+        state = "feedback";
+        setArena("result", reaction + " ms", "Reaction recorded", "Reaction time " + reaction + " milliseconds.");
+        message.textContent = "Nice! " + reaction + " ms. Round " + round + " complete.";
+        updateStats();
+        nextTimer = setTimeout(advanceRound, 950);
+      }
+
+      function handleArenaPress() {
+        if (state === "waiting") {
+          recordFalseStart();
+        } else if (state === "go") {
+          recordReaction();
+        }
+      }
+
+      function advanceRound() {
+        nextTimer = null;
+        if (round >= TOTAL_ROUNDS) {
+          finishChallenge();
+          return;
+        }
+        round += 1;
+        updateStats();
+        beginRound();
+      }
+
+      function finishChallenge() {
+        state = "finished";
+        startBtn.disabled = false;
+        startBtn.textContent = "Play again";
+        const avg = averageReaction();
+        if (avg === null) {
+          setArena("finished", "CHALLENGE OVER", "No clean reactions", "Challenge over. No valid reactions recorded.");
+          message.textContent = "All five rounds were false starts. Try again and wait for green.";
+        } else {
+          if (!bestAverage || avg < bestAverage) {
+            bestAverage = avg;
+            try { localStorage.setItem("reactionTimerBestAverage", String(bestAverage)); } catch (_) {}
+          }
+          setArena("finished", avg + " ms AVG", "Five rounds complete", "Challenge complete. Average reaction time " + avg + " milliseconds.");
+          const validCount = results.filter(function (value) { return Number.isFinite(value); }).length;
+          message.textContent = "Challenge complete: " + avg + " ms average across " + validCount + " valid reaction" + (validCount === 1 ? "" : "s") + ". Lower is better.";
+        }
+        updateStats();
+      }
+
+      startBtn.addEventListener("click", startChallenge);
+      arena.addEventListener("click", handleArenaPress);
+      updateStats();
+    }());
+  </script>
+</body>
+</html>
