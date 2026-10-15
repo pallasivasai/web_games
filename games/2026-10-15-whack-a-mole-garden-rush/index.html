@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#15251d">
+<title>Whack-a-Mole: Garden Rush</title>
+<link rel="stylesheet" href="style.css">
+<script src="game.js" defer></script>
+</head>
+<body>
+<main>
+<p class="eyebrow">DAILY BROWSER GAME · ARCADE</p>
+<h1>Whack-a-Mole 🌱</h1>
+<p class="intro">Tap a mole before it disappears. Watch for the rare golden mole and beat your best score.</p>
+<section class="card" aria-label="Whack-a-Mole game">
+<div class="stats">
+<div class="stat"><span>Score</span><strong id="score">0</strong></div>
+<div class="stat"><span>Time left</span><strong><span id="time">30</span>s</strong></div>
+<div class="stat"><span>Best</span><strong id="best">0</strong></div>
+</div>
+<div class="garden" role="group" aria-label="Nine garden holes">
+<button class="hole" type="button" aria-label="Hole 1, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 2, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 3, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 4, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 5, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 6, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 7, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 8, empty">·</button>
+<button class="hole" type="button" aria-label="Hole 9, empty">·</button>
+</div>
+<p id="status" class="status" role="status" aria-live="polite">Press Start game when ready.</p>
+<div class="actions"><button id="start" class="action primary" type="button">Start game</button><button id="reset" class="action secondary" type="button">Reset best</button></div>
+<p class="hint">30 seconds · Mole +1 · Golden mole +3 · Empty hole −1 (minimum 0)</p>
+</section>
+</main>
+</body>
+</html>
