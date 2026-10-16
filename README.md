@@ -2,6 +2,7 @@
 
 A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a `README.md` with its rules and instructions.
 
+
 ## Games
 
 - [Catch the Dot](./games/2026-10-10-catch-the-dot/) — click the moving dot before time runs out.
