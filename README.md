@@ -9,6 +9,9 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 - [Memory Match](./games/2026-10-11-memory-match/) — memorize and repeat the symbol sequence.
 - [Number Guess](./games/2026-10-12-number-guess/) — find the secret number using higher/lower hints.
 - [Word Scramble Sprint](./games/2026-10-13-word-scramble-sprint/) — unscramble words against a 60-second timer.
+- [Reaction Timer](./games/2026-10-14-reaction-timer/) — test your reflexes across five rounds.
+- [Whack-a-Mole: Garden Rush](./games/2026-10-15-whack-a-mole-garden-rush/) — hit garden moles before the 30-second timer ends.
+- [Pattern Pulse](./games/2026-10-16-pattern-pulse/) — repeat an increasingly long color sequence.
 
 ## Game templates
 
