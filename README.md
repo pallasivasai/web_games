@@ -2,8 +2,6 @@
 
 A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a `README.md` with its rules and instructions.
 
-
-
 ## Games
 
 - [Catch the Dot](./games/2026-10-10-catch-the-dot/) — click the moving dot before time runs out.
@@ -13,6 +11,8 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 - [Reaction Timer](./games/2026-10-14-reaction-timer/) — test your reflexes across five rounds.
 - [Whack-a-Mole: Garden Rush](./games/2026-10-15-whack-a-mole-garden-rush/) — hit garden moles before the 30-second timer ends.
 - [Pattern Pulse](./games/2026-10-16-pattern-pulse/) — repeat an increasingly long color sequence.
+- [Maze Escape](./games/2026-10-17-maze-escape/) — navigate a randomly generated maze and reach the exit before time runs out.
+- [Math Dash](./games/2026-10-19-math-dash/) — solve arithmetic questions in a 60-second sprint and build a scoring streak.
 
 ## Game templates
 
