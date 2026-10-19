@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10152b">
+<title>Math Dash — 60-Second Arithmetic Sprint</title>
+<style>
+:root{color-scheme:dark;--bg:#10152b;--panel:#1b2341;--panel2:#252f55;--ink:#f7f8ff;--muted:#b9c3e6;--line:#3d4b7a;--accent:#ffcf5a;--cyan:#69e0d0;--danger:#ff8d9b;--good:#8de5a6}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:22px;display:grid;place-items:center;background:radial-gradient(ellipse at top,#28365f 0,var(--bg) 62%);color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(100%,680px);padding:clamp(18px,4vw,34px);border:1px solid var(--line);border-radius:26px;background:rgba(27,35,65,.97);box-shadow:0 24px 80px #0005}
+header{text-align:center}
+.eyebrow{display:inline-block;padding:5px 12px;border:1px solid #52618e;border-radius:999px;color:var(--cyan);font-size:.78rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+h1{font-size:clamp(2rem,7vw,3.2rem);line-height:1.05;letter-spacing:-.04em;margin:13px 0 8px}
+header p{margin:0 auto;color:var(--muted);max-width:45ch}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:24px 0 16px}
+.stat{padding:12px 8px;text-align:center;background:#111831;border:1px solid var(--line);border-radius:15px;min-width:0}
+.stat span{display:block;color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.06em}
+.stat strong{display:block;font-size:clamp(1.35rem,4vw,1.8rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.timer-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 2px 8px;font-weight:750}
+#time{font-variant-numeric:tabular-nums;color:var(--accent)}
+.track{height:9px;background:#0e1429;border:1px solid #3b466e;border-radius:99px;overflow:hidden}
+#timeBar{height:100%;width:100%;background:var(--cyan);border-radius:99px;transition:width .1s linear}
+.question-card{margin:20px 0 14px;padding:clamp(20px,5vw,34px) 16px;text-align:center;background:linear-gradient(145deg,#29365e,#1a2240);border:1px solid #48598c;border-radius:22px}
+#level{color:var(--cyan);font-size:.83rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+#question{margin:8px 0 3px;font-size:clamp(2.4rem,10vw,4.4rem);line-height:1.1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+#progressText{margin:10px 0 0;color:var(--muted);font-size:.88rem}
+form{display:flex;gap:10px;max-width:470px;margin:0 auto}
+#answer{width:100%;min-width:0;border:2px solid #6575a9;border-radius:13px;background:#0f1730;color:var(--ink);font:inherit;font-size:1.15rem;padding:12px 14px}
+#answer::placeholder{color:#8995bd}
+#answer:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button{border:0;border-radius:13px;padding:12px 17px;font:inherit;font-weight:800;cursor:pointer;touch-action:manipulation;transition:transform .12s ease,filter .12s ease}
+button:not(:disabled):active{transform:translateY(1px)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--accent);color:#27203a}
+.secondary{background:var(--panel2);color:var(--ink);border:1px solid #56679a}
+#feedback{min-height:3.2em;margin:13px 0 4px;text-align:center;color:var(--muted);font-weight:650}
+.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:12px 0 0}
+.actions button{min-width:125px}
+.how-to{margin-top:26px;padding-top:19px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+.how-to h2{margin:0 0 7px;color:var(--ink);font-size:1rem}
+.how-to ul{padding-left:21px;margin:7px 0 0}
+.how-to li+li{margin-top:4px}
+@media(max-width:430px){body{padding:10px}main{padding:18px 13px;border-radius:19px}.stats{gap:6px}.stat{padding:10px 4px}form{flex-direction:column}form button{width:100%}.actions button{flex:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Quick thinking · No install</span>
+    <h1>Math Dash</h1>
+    <p>Solve as many arithmetic questions as you can before the clock hits zero. Keep a streak going to earn bonus points.</p>
+  </header>
+
+  <section class="stats" aria-label="Round statistics">
+    <div class="stat"><span>Score</span><strong id="score">0</strong></div>
+    <div class="stat"><span>Streak</span><strong id="streak">0 🔥</strong></div>
+    <div class="stat"><span>Best score</span><strong id="best">—</strong></div>
+  </section>
+
+  <div class="timer-row"><label for="timeBar">Time remaining</label><span id="time">60s</span></div>
+  <div class="track" role="progressbar" aria-label="Time remaining" aria-valuemin="0" aria-valuemax="60" aria-valuenow="60" id="timeTrack">
+    <div id="timeBar"></div>
+  </div>
+
+  <section class="question-card" aria-label="Current math question">
+    <div id="level">Level 1</div>
+    <h2 id="question">Ready?</h2>
+    <p id="progressText">Start a round to begin · 5 correct answers unlock each level</p>
+  </section>
+
+  <form id="answerForm">
+    <label for="answer" class="visually-hidden">Your whole-number answer</label>
+    <input id="answer" name="answer" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Type your answer" aria-label="Your whole-number answer" disabled>
+    <button id="submit" class="primary" type="submit" disabled>Answer ↵</button>
+  </form>
+
+  <p id="feedback" role="status" aria-live="polite" aria-atomic="true">Press Start round when you're ready.</p>
+
+  <div class="actions">
+    <button id="start" class="primary" type="button">Start round</button>
+    <button id="skip" class="secondary" type="button" disabled>Skip (−1)</button>
+    <button id="restart" class="secondary" type="button" disabled>Restart round</button>
+  </div>
+
+  <section class="how-to">
+    <h2>How to play</h2>
+    <ul>
+      <li>Type a whole-number answer and press <strong>Enter</strong> or tap <strong>Answer</strong>.</li>
+      <li>A correct answer earns <strong>10 points</strong>, plus a streak bonus of up to 10 extra points.</li>
+      <li>A wrong answer costs 2 points; skipping costs 1. Your score never drops below zero.</li>
+      <li>Every 5 correct answers raises the difficulty. You have 60 seconds—press <strong>Play again</strong> after the round ends.</li>
+    </ul>
+  </section>
+</main>
+<style>
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+<script>
+(() => {
+  'use strict';
+  const ROUND_SECONDS = 60;
+  const BEST_KEY = 'math-dash-best-score-v1';
+  const $ = selector => document.querySelector(selector);
+  const scoreEl = $('#score');
+  const streakEl = $('#streak');
+  const bestEl = $('#best');
+  const timeEl = $('#time');
+  const timeTrack = $('#timeTrack');
+  const timeBar = $('#timeBar');
+  const levelEl = $('#level');
+  const questionEl = $('#question');
+  const progressText = $('#progressText');
+  const answerForm = $('#answerForm');
+  const answerInput = $('#answer');
+  const submitBtn = $('#submit');
+  const startBtn = $('#start');
+  const skipBtn = $('#skip');
+  const restartBtn = $('#restart');
+  const feedbackEl = $('#feedback');
+
+  let state = 'ready';
+  let score = 0;
+  let streak = 0;
+  let correct = 0;
+  let answered = 0;
+  let currentAnswer = null;
+  let endAt = 0;
+  let timerId = null;
+  let bestScore = readBestScore();
+
+  function readBestScore() {
+    try {
+      const saved = localStorage.getItem(BEST_KEY);
+      if (saved === null) return null;
+      const value = Number(saved);
+      return Number.isFinite(value) && value >= 0 ? value : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveBestScore(value) {
+    try { localStorage.setItem(BEST_KEY, String(value)); } catch (_) {}
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function makeQuestion() {
+    const tier = Math.min(3, Math.floor(correct / 5));
+    let a;
+    let b;
+    let operation;
+    let answer;
+
+    if (tier === 0) {
+      operation = Math.random() < 0.5 ? '+' : '−';
+      a = randomInt(2, 20);
+      b = randomInt(1, 20);
+      if (operation === '−' && b > a) [a, b] = [b, a];
+      answer = operation === '+' ? a + b : a - b;
+    } else if (tier === 1) {
+      const operations = ['+', '−', '×'];
+      operation = operations[randomInt(0, operations.length - 1)];
+      if (operation === '×') {
+        a = randomInt(2, 12);
+        b = randomInt(2, 12);
+        answer = a * b;
+      } else {
+        a = randomInt(5, 50);
+        b = randomInt(5, 50);
+        if (operation === '−' && b > a) [a, b] = [b, a];
+        answer = operation === '+' ? a + b : a - b;
+      }
+    } else if (tier === 2) {
+      operation = ['+', '−', '×', '÷'][randomInt(0, 3)];
+      if (operation === '÷') {
+        b = randomInt(2, 12);
+        answer = randomInt(2, 12);
+        a = b * answer;
+      } else if (operation === '×') {
+        a = randomInt(3, 15);
+        b = randomInt(3, 15);
+        answer = a * b;
+      } else {
+        a = randomInt(10, 99);
+        b = randomInt(10, 99);
+        if (operation === '−' && b > a) [a, b] = [b, a];
+        answer = operation === '+' ? a + b : a - b;
+      }
+    } else {
+      operation = ['+', '−', '×', '÷'][randomInt(0, 3)];
+      if (operation === '÷') {
+        b = randomInt(2, 15);
+        answer = randomInt(3, 20);
+        a = b * answer;
+      } else if (operation === '×') {
+        a = randomInt(5, 20);
+        b = randomInt(5, 20);
+        answer = a * b;
+      } else {
+        a = randomInt(20, 199);
+        b = randomInt(10, 199);
+        if (operation === '−' && b > a) [a, b] = [b, a];
+        answer = operation === '+' ? a + b : a - b;
+      }
+    }
+
+    currentAnswer = answer;
+    questionEl.textContent = a + ' ' + operation + ' ' + b + ' = ?';
+    levelEl.textContent = 'Level ' + (tier + 1);
+    if (tier < 3) {
+      const progress = correct % 5;
+      progressText.textContent = progress + ' / 5 correct answers toward the next level';
+    } else {
+      progressText.textContent = 'Maximum difficulty reached · keep your streak alive';
+    }
+  }
+
+  function updateStats() {
+    scoreEl.textContent = String(score);
+    streakEl.textContent = String(streak) + ' 🔥';
+    bestEl.textContent = bestScore === null ? '—' : String(bestScore);
+  }
+
+  function updateClock(secondsLeft) {
+    const safeSeconds = Math.max(0, Math.min(ROUND_SECONDS, secondsLeft));
+    timeEl.textContent = Math.ceil(safeSeconds) + 's';
+    timeBar.style.width = (safeSeconds / ROUND_SECONDS * 100) + '%';
+    timeTrack.setAttribute('aria-valuenow', String(Math.ceil(safeSeconds)));
+    timeBar.style.background = safeSeconds <= 10 ? 'var(--danger)' : 'var(--cyan)';
+  }
+
+  function setInputsEnabled(enabled) {
+    answerInput.disabled = !enabled;
+    submitBtn.disabled = !enabled;
+    skipBtn.disabled = !enabled;
+    restartBtn.disabled = !enabled;
+  }
+
+  function stopTimer() {
+    if (timerId !== null) clearInterval(timerId);
+    timerId = null;
+  }
+
+  function finishRound() {
+    if (state !== 'playing') return;
+    state = 'over';
+    stopTimer();
+    setInputsEnabled(false);
+    startBtn.disabled = false;
+    startBtn.textContent = 'Play again';
+    const accuracy = answered === 0 ? 0 : Math.round(correct / answered * 100);
+    if (bestScore === null || score > bestScore) {
+      bestScore = score;
+      saveBestScore(bestScore);
+    }
+    updateStats();
+    questionEl.textContent = 'Time!';
+    progressText.textContent = 'Round complete · ' + correct + ' correct out of ' + answered + ' answers';
+    feedbackEl.textContent = 'Final score: ' + score + ' points · Accuracy: ' + accuracy + '%. Press Play again for another round.';
+  }
+
+  function tick() {
+    if (state !== 'playing') return;
+    const remaining = Math.max(0, (endAt - Date.now()) / 1000);
+    updateClock(remaining);
+    if (remaining <= 0) finishRound();
+  }
+
+  function startRound() {
+    stopTimer();
+    state = 'playing';
+    score = 0;
+    streak = 0;
+    correct = 0;
+    answered = 0;
+    endAt = Date.now() + ROUND_SECONDS * 1000;
+    startBtn.disabled = true;
+    startBtn.textContent = 'Round in progress';
+    setInputsEnabled(true);
+    updateStats();
+    updateClock(ROUND_SECONDS);
+    makeQuestion();
+    feedbackEl.textContent = 'Go! Correct answers build your streak.';
+    timerId = setInterval(tick, 100);
+    answerInput.value = '';
+    answerInput.focus();
+  }
+
+  function nextQuestion() {
+    makeQuestion();
+    answerInput.value = '';
+    updateStats();
+    if (state === 'playing') answerInput.focus();
+  }
+
+  answerForm.addEventListener('submit', event => {
+    event.preventDefault();
+    if (state !== 'playing') return;
+    const raw = answerInput.value.trim();
+    if (raw === '') {
+      feedbackEl.textContent = 'Type a whole-number answer first.';
+      answerInput.focus();
+      return;
+    }
+    const value = Number(raw);
+    if (!Number.isSafeInteger(value)) {
+      feedbackEl.textContent = 'Please enter a valid whole number.';
+      answerInput.focus();
+      return;
+    }
+
+    answered++;
+    if (value === currentAnswer) {
+      correct++;
+      streak++;
+      const points = 10 + Math.min(streak - 1, 5) * 2;
+      score += points;
+      feedbackEl.textContent = 'Correct! +' + points + ' points. Your streak is ' + streak + '.';
+    } else {
+      streak = 0;
+      score = Math.max(0, score - 2);
+      feedbackEl.textContent = 'Not quite — the answer was ' + currentAnswer + '. −2 points.';
+    }
+    nextQuestion();
+  });
+
+  skipBtn.addEventListener('click', () => {
+    if (state !== 'playing') return;
+    answered++;
+    streak = 0;
+    score = Math.max(0, score - 1);
+    feedbackEl.textContent = 'Skipped. The answer was ' + currentAnswer + '. −1 point.';
+    nextQuestion();
+  });
+
+  startBtn.addEventListener('click', () => {
+    if (state === 'ready' || state === 'over') startRound();
+  });
+
+  restartBtn.addEventListener('click', () => {
+    if (state === 'playing') startRound();
+  });
+
+  updateStats();
+  updateClock(ROUND_SECONDS);
+  setInputsEnabled(false);
+})();
+</script>
+</body>
+</html>
