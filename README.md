@@ -14,6 +14,8 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 - [Maze Escape](./games/2026-10-17-maze-escape/) — navigate a randomly generated maze and reach the exit before time runs out.
 - [Math Dash](./games/2026-10-19-math-dash/) — solve arithmetic questions in a 60-second sprint and build a scoring streak.
 
+- [Tic-Tac-Toe Tactics](./games/2026-10-21-tic-tac-toe/) — play locally or challenge an unbeatable minimax CPU.
+
 ## Game templates
 
 - [14 reusable game templates](./GAME_TEMPLATES.md) — gameplay concepts and rules for future daily games.
