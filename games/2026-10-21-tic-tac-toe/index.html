@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Tic-Tac-Toe Tactics</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#182438;--line:#30415b;--text:#f4f7fb;--muted:#aebbd0;--accent:#7ce2c3;--x:#80b7ff;--o:#ffb86b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#1d3150 0,var(--bg) 58%);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center;padding:20px}
+main{width:min(100%,560px)}
+header{text-align:center;margin-bottom:20px}
+h1{margin:0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-.04em}
+header p{margin:6px 0 0;color:var(--muted)}
+.panel{background:rgba(24,36,56,.94);border:1px solid var(--line);border-radius:20px;padding:clamp(16px,4vw,24px);box-shadow:0 18px 50px #0003}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+label{color:var(--muted);font-size:.92rem}
+select,button{font:inherit}
+select{margin-left:6px;background:#101827;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.status{min-height:52px;display:grid;place-items:center;text-align:center;background:#101827;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:16px;font-weight:700}
+.status[data-state="win"]{color:var(--accent);border-color:#397a6a}
+.status[data-state="draw"]{color:#ffd58c}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:390px;margin:0 auto}
+.cell{aspect-ratio:1;border:1px solid var(--line);border-radius:15px;background:#202f46;color:var(--text);font-size:clamp(2.6rem,12vw,4.6rem);font-weight:800;cursor:pointer;transition:background .15s,transform .15s}
+.cell:hover:enabled{background:#2a3d58;transform:translateY(-1px)}
+.cell:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.cell:disabled{cursor:default;opacity:1}
+.cell[data-mark="X"]{color:var(--x)}.cell[data-mark="O"]{color:var(--o)}
+.cell.winning{background:#254a49;border-color:var(--accent)}
+.scoreboard{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.score{background:#101827;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.score span{display:block;color:var(--muted);font-size:.85rem}
+.score strong{display:block;font-size:1.5rem}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.actions button{border:1px solid var(--line);border-radius:11px;padding:10px 16px;background:#263750;color:var(--text);font-weight:700;cursor:pointer}
+.actions .primary{background:var(--accent);border-color:var(--accent);color:#10231f}
+.hint{text-align:center;color:var(--muted);font-size:.9rem;margin:14px 0 0}
+@media(max-width:420px){body{padding:12px}.controls{align-items:flex-start}.board{gap:7px}.cell{border-radius:11px}.scoreboard{gap:6px}.score{padding:8px 4px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Tic-Tac-Toe <span style="color:var(--accent)">Tactics</span></h1>
+<p>Read the board. Block the threat. Find the line.</p>
+</header>
+<section class="panel" aria-label="Tic-tac-toe game">
+<div class="controls">
+<label for="mode">Play mode
+<select id="mode"><option value="cpu">Challenge the CPU</option><option value="two">Two players</option></select>
+</label>
+<span class="hint" style="margin:0">You are X · CPU is O</span>
+</div>
+<div id="status" class="status" role="status" aria-live="polite">Your move — choose a square.</div>
+<div id="board" class="board" role="group" aria-label="Nine-square game board">
+<button class="cell" type="button" data-index="0" aria-label="Row 1, column 1"></button>
+<button class="cell" type="button" data-index="1" aria-label="Row 1, column 2"></button>
+<button class="cell" type="button" data-index="2" aria-label="Row 1, column 3"></button>
+<button class="cell" type="button" data-index="3" aria-label="Row 2, column 1"></button>
+<button class="cell" type="button" data-index="4" aria-label="Row 2, column 2"></button>
+<button class="cell" type="button" data-index="5" aria-label="Row 2, column 3"></button>
+<button class="cell" type="button" data-index="6" aria-label="Row 3, column 1"></button>
+<button class="cell" type="button" data-index="7" aria-label="Row 3, column 2"></button>
+<button class="cell" type="button" data-index="8" aria-label="Row 3, column 3"></button>
+</div>
+<div class="scoreboard" aria-label="Match score">
+<div class="score"><span id="xLabel">You (X)</span><strong id="xScore">0</strong></div>
+<div class="score"><span>Draws</span><strong id="drawScore">0</strong></div>
+<div class="score"><span id="oLabel">CPU (O)</span><strong id="oScore">0</strong></div>
+</div>
+<div class="actions">
+<button type="button" class="primary" id="nextRound">New round</button>
+<button type="button" id="resetMatch">Reset match</button>
+</div>
+<p class="hint">Keyboard friendly · Works offline · No ads or external libraries</p>
+</section>
+</main>
+<script>
+(() => {
+  "use strict";
+  const winningLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const cells = Array.from(document.querySelectorAll(".cell"));
+  const modeSelect = document.getElementById("mode");
+  const statusEl = document.getElementById("status");
+  const xScoreEl = document.getElementById("xScore");
+  const oScoreEl = document.getElementById("oScore");
+  const drawScoreEl = document.getElementById("drawScore");
+  const xLabel = document.getElementById("xLabel");
+  const oLabel = document.getElementById("oLabel");
+  let board, current, gameOver, scores, cpuTimer = null;
+
+  function resultFor(position) {
+    for (const line of winningLines) {
+      const [a,b,c] = line;
+      if (position[a] && position[a] === position[b] && position[a] === position[c]) {
+        return { winner: position[a], line };
+      }
+    }
+    return position.every(Boolean) ? { winner: "draw", line: [] } : null;
+  }
+
+  function minimax(position, maximizing, depth) {
+    const result = resultFor(position);
+    if (result) {
+      if (result.winner === "O") return 10 - depth;
+      if (result.winner === "X") return depth - 10;
+      return 0;
+    }
+    if (maximizing) {
+      let best = -Infinity;
+      for (let i = 0; i < 9; i++) if (!position[i]) {
+        position[i] = "O";
+        best = Math.max(best, minimax(position, false, depth + 1));
+        position[i] = "";
+      }
+      return best;
+    }
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) if (!position[i]) {
+      position[i] = "X";
+      best = Math.min(best, minimax(position, true, depth + 1));
+      position[i] = "";
+    }
+    return best;
+  }
+
+  function chooseCpuMove() {
+    let bestScore = -Infinity;
+    let choices = [];
+    for (let i = 0; i < 9; i++) if (!board[i]) {
+      board[i] = "O";
+      const score = minimax(board, false, 0);
+      board[i] = "";
+      if (score > bestScore) { bestScore = score; choices = [i]; }
+      else if (score === bestScore) choices.push(i);
+    }
+    return choices[Math.floor(Math.random() * choices.length)];
+  }
+
+  function setStatus(message, state = "") {
+    statusEl.textContent = message;
+    statusEl.dataset.state = state;
+  }
+
+  function render(result = null) {
+    cells.forEach((cell, i) => {
+      const mark = board[i];
+      cell.textContent = mark;
+      cell.dataset.mark = mark || "";
+      cell.classList.toggle("winning", Boolean(result && result.line.includes(i)));
+      cell.disabled = gameOver || Boolean(mark) || (modeSelect.value === "cpu" && current === "O");
+      cell.setAttribute("aria-label", `Row ${Math.floor(i / 3) + 1}, column ${(i % 3) + 1}${mark ? ", " + mark : ", empty"}`);
+    });
+    xScoreEl.textContent = scores.X;
+    oScoreEl.textContent = scores.O;
+    drawScoreEl.textContent = scores.draw;
+    xLabel.textContent = modeSelect.value === "cpu" ? "You (X)" : "Player X";
+    oLabel.textContent = modeSelect.value === "cpu" ? "CPU (O)" : "Player O";
+  }
+
+  function finishIfNeeded() {
+    const result = resultFor(board);
+    if (!result) return false;
+    gameOver = true;
+    if (result.winner === "draw") {
+      scores.draw++;
+      setStatus("It's a draw! No open squares left.", "draw");
+    } else {
+      scores[result.winner]++;
+      setStatus(modeSelect.value === "cpu"
+        ? (result.winner === "X" ? "You win! Great tactics." : "CPU wins this round. Try another strategy.")
+        : `Player ${result.winner} wins the round!`, "win");
+    }
+    render(result);
+    return true;
+  }
+
+  function makeMove(index, mark) {
+    if (gameOver || board[index]) return;
+    if (modeSelect.value === "cpu" && mark !== "X") return;
+    if (modeSelect.value === "two" && mark !== current) return;
+    board[index] = mark;
+    current = mark === "X" ? "O" : "X";
+    if (finishIfNeeded()) return;
+    setStatus(modeSelect.value === "cpu"
+      ? (current === "O" ? "CPU is thinking…" : "Your move — choose a square.")
+      : `Player ${current}'s turn.`);
+    render();
+    if (modeSelect.value === "cpu" && current === "O") {
+      cells.forEach(cell => cell.disabled = true);
+      cpuTimer = setTimeout(() => {
+        cpuTimer = null;
+        if (gameOver || modeSelect.value !== "cpu") return;
+        const move = chooseCpuMove();
+        if (move !== undefined) {
+          board[move] = "O";
+          current = "X";
+          if (!finishIfNeeded()) {
+            setStatus("Your move — choose a square.");
+            render();
+          }
+        }
+      }, 280);
+    }
+  }
+
+  function clearTimer() {
+    if (cpuTimer !== null) {
+      clearTimeout(cpuTimer);
+      cpuTimer = null;
+    }
+  }
+
+  function newRound(resetScores = false) {
+    clearTimer();
+    if (resetScores || !scores) scores = { X: 0, O: 0, draw: 0 };
+    board = Array(9).fill("");
+    current = "X";
+    gameOver = false;
+    setStatus(modeSelect.value === "cpu" ? "Your move — choose a square." : "Player X starts.");
+    render();
+  }
+
+  cells.forEach((cell, i) => cell.addEventListener("click", () => makeMove(i, current)));
+  document.getElementById("nextRound").addEventListener("click", () => newRound(false));
+  document.getElementById("resetMatch").addEventListener("click", () => newRound(true));
+  modeSelect.addEventListener("change", () => newRound(true));
+  newRound(true);
+})();
+</script>
+</body>
+</html>
