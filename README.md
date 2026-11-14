@@ -1,6 +1,6 @@
 # Web Games 🎮
 
-A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a `README.md` with its rules and instructions.
+A growing collection of simple browser games built with **HTML, CSS, and JavaScript**. Each game lives in its own folder and includes a \`README.md\` with its rules and instructions.
 
 ## Games
 
@@ -15,6 +15,7 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 - [Math Dash](./games/2026-10-19-math-dash/) — solve arithmetic questions in a 60-second sprint and build a scoring streak.
 
 - [Tic-Tac-Toe Tactics](./games/2026-10-21-tic-tac-toe/) — play locally or challenge an unbeatable minimax CPU.
+- [Slide Lab](./games/2026-11-14-slide-lab/) — solve a 3×3, 4×4, or 5×5 sliding-number puzzle with undo and local best records.
 
 ## Game templates
 
@@ -22,8 +23,8 @@ A growing collection of simple browser games built with **HTML, CSS, and JavaScr
 
 ## Run a game
 
-Open a game's `index.html` file in any modern browser. No installation or build tools are required.
+Open a game's \`index.html\` file in any modern browser. No installation or build tools are required.
 
 ## Daily updates
 
-New games are added through ChatGPT's scheduled GitHub update task. Each update should use a unique game concept and include instructions in that game's `README.md`.
+New games are added through ChatGPT's scheduled GitHub update task. Each update should use a unique game concept and include instructions in that game's \`README.md\`.
