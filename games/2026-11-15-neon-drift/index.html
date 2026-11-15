@@ -1,1 +1,305 @@
-'''
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>Neon Drift — Lane Survival</title>
+<style>
+:root{color-scheme:dark;--bg:#07111f;--panel:#101e31;--line:#29415d;--cyan:#57e5ef;--pink:#ff668f;--gold:#ffd36b;--text:#eef7ff;--muted:#9db0c6}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#183b59 0,transparent 55%),var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;justify-content:center;padding:24px 14px}
+button{font:inherit}
+.app{width:min(100%,760px)}
+header{text-align:center;margin-bottom:18px}
+.eyebrow{color:var(--cyan);font-size:.75rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+h1{font-size:clamp(2rem,7vw,3.25rem);letter-spacing:.06em;margin:4px 0;background:linear-gradient(90deg,#fff,var(--cyan));background-clip:text;color:transparent}
+.subtitle{margin:0;color:var(--muted);font-size:.95rem}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:18px 0 12px}
+.stat{background:linear-gradient(145deg,#14263b,#0c1929);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center;min-width:0}
+.stat small{display:block;color:var(--muted);font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.stat strong{display:block;font-size:clamp(1.05rem,4vw,1.45rem);font-variant-numeric:tabular-nums;margin-top:3px}
+#shieldValue{color:var(--gold)}
+.track-wrap{position:relative;padding:9px;border:1px solid #31516c;border-radius:22px;background:#0c1a2b;box-shadow:0 18px 55px #0008}
+.track{height:clamp(420px,62vh,590px);min-height:420px;position:relative;overflow:hidden;border-radius:15px;background:linear-gradient(180deg,#10283e,#0a1727 70%);isolation:isolate;touch-action:pan-y}
+.track:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 48px,#ffffff08 49px 50px);pointer-events:none}
+.lane-lines{position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr);pointer-events:none}
+.lane-lines span{border-right:1px dashed #9ac2df25}
+.lane-lines span:last-child{border:0}
+.player,.item{position:absolute;z-index:2;left:0;top:0;transform:translate(-50%,0);display:grid;place-items:center;user-select:none;pointer-events:none}
+.player{width:42px;height:48px;bottom:18px;top:auto;border-radius:13px 13px 9px 9px;background:linear-gradient(145deg,#a5fbff,#22b8d0);box-shadow:0 0 20px #3ee4f088,0 0 42px #3ee4f044;color:#05202c;font-size:.7rem;font-weight:1000;letter-spacing:.04em}
+.player:before{content:"";position:absolute;top:-7px;width:18px;height:10px;border-radius:8px 8px 2px 2px;background:#d9ffff}
+.player.shielded{outline:3px solid var(--gold);outline-offset:5px}
+.item{width:38px;height:38px;border-radius:10px;font-size:1.2rem;font-weight:900}
+.item.block{background:linear-gradient(145deg,#ff9bb2,#ed386d);box-shadow:0 0 18px #ff477d88;color:#3a0717;border:2px solid #ffd0dc}
+.item.orb{border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#5cf5ff 35%,#1596d7 75%);box-shadow:0 0 24px #50e9ff;color:#062538}
+.item.shield{border-radius:50%;background:radial-gradient(circle,#fff2bb,#f5b83f 65%,#a96817);box-shadow:0 0 22px #ffd36b;color:#3a2500}
+.overlay{position:absolute;z-index:5;inset:0;display:grid;place-items:center;padding:20px;background:#06111ddd;text-align:center;backdrop-filter:blur(5px)}
+.overlay[hidden]{display:none}
+.overlay-card{max-width:390px}
+.overlay h2{font-size:clamp(1.6rem,6vw,2.2rem);margin:0 0 8px}
+.overlay p{color:#bfd0e2;line-height:1.55;margin:0 0 18px}
+.primary,.secondary,.move-btn{border:0;border-radius:12px;min-height:46px;padding:10px 18px;font-weight:850;cursor:pointer;transition:transform .15s,filter .15s}
+.primary{background:linear-gradient(100deg,#60f0ee,#50b9ec);color:#05202b;box-shadow:0 8px 25px #31d9e455}
+.secondary,.move-btn{background:#1a3049;border:1px solid #3b5874;color:var(--text)}
+button:hover{filter:brightness(1.1)}
+button:active{transform:scale(.97)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.toolbar{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:13px 0}
+.controls{display:flex;justify-content:center;gap:18px;align-items:center;margin:12px 0}
+.move-btn{width:72px;height:54px;font-size:1.4rem}
+.hint{color:var(--muted);text-align:center;font-size:.83rem;line-height:1.5;margin:12px auto 0;max-width:580px}
+.key{display:inline-block;border:1px solid #536b84;border-bottom-width:3px;border-radius:5px;padding:0 5px;color:#e9f7ff;font-size:.75rem}
+#status{min-height:1.5em;text-align:center;color:var(--cyan);font-weight:700;margin:6px 0}
+@media(max-width:480px){body{padding:17px 10px}.hud{gap:6px}.stat{padding:8px 4px}.track-wrap{padding:6px}.track{height:58vh;min-height:410px}.toolbar{gap:7px}.secondary,.primary{padding:9px 13px}.move-btn{width:84px;height:58px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="eyebrow">Arcade survival · Game 15</div>
+    <h1>NEON DRIFT</h1>
+    <p class="subtitle">Shift lanes. Dodge the blocks. Keep your signal alive.</p>
+  </header>
+  <section class="hud" aria-label="Game statistics">
+    <div class="stat"><small>Score</small><strong id="score">0</strong></div>
+    <div class="stat"><small>Time</small><strong id="time">00:00</strong></div>
+    <div class="stat"><small>Level</small><strong id="level">1</strong></div>
+    <div class="stat"><small>Shield</small><strong id="shieldValue">—</strong></div>
+  </section>
+  <div class="track-wrap">
+    <div id="track" class="track" role="group" aria-label="Five-lane neon drift playfield. Move left or right to avoid pink blocks and collect cyan energy orbs.">
+      <div class="lane-lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      <div id="player" class="player" aria-hidden="true">YOU</div>
+      <div id="items" aria-hidden="true"></div>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <h2 id="overlayTitle">Ready to drift?</h2>
+          <p id="overlayText">Move between five lanes to dodge incoming blocks. Collect energy orbs for bonus points and grab a shield to survive one collision.</p>
+          <button id="overlayAction" class="primary" type="button">Start run</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button id="pauseBtn" class="secondary" type="button" disabled>Pause</button>
+    <button id="restartBtn" class="secondary" type="button">Restart run</button>
+  </div>
+  <div class="controls" aria-label="Movement controls">
+    <button id="leftBtn" class="move-btn" type="button" aria-label="Move one lane left">←</button>
+    <span class="hint">Move one lane at a time</span>
+    <button id="rightBtn" class="move-btn" type="button" aria-label="Move one lane right">→</button>
+  </div>
+  <p id="status" role="status" aria-live="polite">Press Start run when you're ready.</p>
+  <p class="hint">Keyboard: <span class="key">←</span> <span class="key">→</span> or <span class="key">A</span> <span class="key">D</span> to move · <span class="key">Space</span> to pause. On touch screens, use the arrows or swipe across the track.</p>
+</main>
+<script>
+const GameLogic = (() => {
+  const LANES = 5;
+  function createState() {
+    return { mode: "ready", lane: 2, items: [], elapsedMs: 0, score: 0, orbs: 0, level: 1, shield: false, spawnAccumulator: 0, lastFrame: 0 };
+  }
+  function moveLane(lane, direction, laneCount = LANES) {
+    return Math.max(0, Math.min(laneCount - 1, lane + direction));
+  }
+  function getLevel(elapsedMs) {
+    return Math.min(8, 1 + Math.floor(Math.max(0, elapsedMs) / 15000));
+  }
+  function getSpawnInterval(level) {
+    return Math.max(390, 850 - (Math.max(1, level) - 1) * 60);
+  }
+  function isInContact(itemY, itemSize, playerY) {
+    return itemY + itemSize >= playerY && itemY <= playerY + 42;
+  }
+  function scoreFor(elapsedMs, orbCount) {
+    return Math.floor(Math.max(0, elapsedMs) / 1000) + Math.max(0, orbCount) * 10;
+  }
+  function formatTime(ms) {
+    const total = Math.floor(Math.max(0, ms) / 1000);
+    return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
+  }
+  function collisionOutcome(hasShield) {
+    return hasShield
+      ? { mode: "running", shield: false, absorbed: true, gameOver: false }
+      : { mode: "over", shield: false, absorbed: false, gameOver: true };
+  }
+  function registerCollision(state) {
+    const outcome = collisionOutcome(state.shield);
+    state.shield = outcome.shield;
+    if (outcome.gameOver) state.mode = "over";
+    return outcome;
+  }
+  function applyPickup(state, type) {
+    if (type === "orb") state.orbs += 1;
+    if (type === "shield") state.shield = true;
+    state.score = scoreFor(state.elapsedMs, state.orbs);
+  }
+  return { LANES, createState, moveLane, getLevel, getSpawnInterval, isInContact, scoreFor, formatTime, collisionOutcome, registerCollision, applyPickup };
+})();
+if (typeof module !== "undefined" && module.exports) module.exports = GameLogic;
+
+if (typeof document !== "undefined") {
+  const $ = (id) => document.getElementById(id);
+  const track = $("track"), player = $("player"), itemsLayer = $("items"), overlay = $("overlay");
+  const scoreEl = $("score"), timeEl = $("time"), levelEl = $("level"), shieldEl = $("shieldValue");
+  const statusEl = $("status"), pauseBtn = $("pauseBtn"), overlayAction = $("overlayAction");
+  let state = GameLogic.createState();
+  let rafId = 0;
+  let best = 0;
+  try { best = Number(localStorage.getItem("neon-drift-best") || 0) || 0; } catch (_) {}
+
+  function setStatus(message) { statusEl.textContent = message; }
+  function showOverlay(title, message, action, label) {
+    $("overlayTitle").textContent = title;
+    $("overlayText").textContent = message;
+    overlayAction.textContent = label;
+    overlay.dataset.action = action;
+    overlay.hidden = false;
+  }
+  function hideOverlay() { overlay.hidden = true; }
+  function renderHud() {
+    scoreEl.textContent = String(state.score);
+    timeEl.textContent = GameLogic.formatTime(state.elapsedMs);
+    levelEl.textContent = String(state.level);
+    shieldEl.textContent = state.shield ? "READY" : "—";
+    player.classList.toggle("shielded", state.shield);
+  }
+  function move(direction) {
+    if (state.mode !== "running") return;
+    state.lane = GameLogic.moveLane(state.lane, direction);
+    renderPlayer();
+  }
+  function renderPlayer() {
+    player.style.left = ((state.lane + 0.5) / GameLogic.LANES * 100) + "%";
+  }
+  function renderItems() {
+    itemsLayer.replaceChildren();
+    for (const item of state.items) {
+      const el = document.createElement("div");
+      el.className = "item " + item.type;
+      el.textContent = item.type === "block" ? "✦" : item.type === "orb" ? "＋" : "S";
+      el.style.left = ((item.lane + 0.5) / GameLogic.LANES * 100) + "%";
+      el.style.top = item.y + "px";
+      itemsLayer.appendChild(el);
+    }
+  }
+  function spawnItem() {
+    const roll = Math.random();
+    let type = roll < 0.72 ? "block" : roll < 0.94 ? "orb" : "shield";
+    if (type === "shield" && state.shield) type = "orb";
+    state.items.push({ lane: Math.floor(Math.random() * GameLogic.LANES), y: -42, size: 38, speed: 205 + (state.level - 1) * 27, type });
+  }
+  function saveBest() {
+    if (state.score <= best) return;
+    best = state.score;
+    try { localStorage.setItem("neon-drift-best", String(best)); } catch (_) {}
+  }
+  function endGame() {
+    state.mode = "over";
+    cancelAnimationFrame(rafId);
+    saveBest();
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = "Pause";
+    showOverlay("Signal lost", "You scored " + state.score + " points in " + GameLogic.formatTime(state.elapsedMs) + ". Best score: " + best + ". Drift again?", "restart", "Play again");
+    setStatus("Game over. Final score: " + state.score + ".");
+    renderHud();
+  }
+  function handleContact(item) {
+    if (item.lane !== state.lane || !GameLogic.isInContact(item.y, item.size, track.clientHeight - 60)) return false;
+    if (item.type === "block") {
+      const outcome = GameLogic.registerCollision(state);
+      if (outcome.gameOver) { endGame(); return true; }
+      setStatus("Shield absorbed the hit! Find another one.");
+    } else if (item.type === "orb") {
+      GameLogic.applyPickup(state, "orb");
+      setStatus("Energy collected: +10 points.");
+    } else {
+      GameLogic.applyPickup(state, "shield");
+      setStatus("Shield acquired. It will absorb one block.");
+    }
+    item.collected = true;
+    return false;
+  }
+  function frame(now) {
+    if (state.mode !== "running") return;
+    const dt = Math.min(50, Math.max(0, now - state.lastFrame));
+    state.lastFrame = now;
+    state.elapsedMs += dt;
+    state.level = GameLogic.getLevel(state.elapsedMs);
+    state.score = GameLogic.scoreFor(state.elapsedMs, state.orbs);
+    state.spawnAccumulator += dt;
+    const interval = GameLogic.getSpawnInterval(state.level);
+    while (state.spawnAccumulator >= interval) {
+      state.spawnAccumulator -= interval;
+      spawnItem();
+    }
+    for (const item of state.items) {
+      item.y += item.speed * dt / 1000;
+      if (handleContact(item)) return;
+    }
+    state.items = state.items.filter(item => !item.collected && item.y < track.clientHeight + 45);
+    renderItems();
+    renderHud();
+    rafId = requestAnimationFrame(frame);
+  }
+  function startRun() {
+    cancelAnimationFrame(rafId);
+    state = GameLogic.createState();
+    state.mode = "running";
+    state.lastFrame = performance.now();
+    renderPlayer();
+    renderItems();
+    renderHud();
+    hideOverlay();
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = "Pause";
+    setStatus("Run started. Keep moving!");
+    rafId = requestAnimationFrame(frame);
+  }
+  function pauseRun() {
+    if (state.mode === "running") {
+      state.mode = "paused";
+      cancelAnimationFrame(rafId);
+      pauseBtn.textContent = "Resume";
+      showOverlay("Paused", "Take a breath. Your score and incoming objects are waiting.", "resume", "Resume run");
+      setStatus("Game paused.");
+    } else if (state.mode === "paused") {
+      state.mode = "running";
+      state.lastFrame = performance.now();
+      hideOverlay();
+      pauseBtn.textContent = "Pause";
+      setStatus("Back in the drift.");
+      rafId = requestAnimationFrame(frame);
+    }
+  }
+  function restartRun() { startRun(); }
+  overlayAction.addEventListener("click", () => {
+    const action = overlay.dataset.action;
+    if (action === "resume") pauseRun();
+    else startRun();
+  });
+  pauseBtn.addEventListener("click", pauseRun);
+  $("restartBtn").addEventListener("click", restartRun);
+  $("leftBtn").addEventListener("click", () => move(-1));
+  $("rightBtn").addEventListener("click", () => move(1));
+  document.addEventListener("keydown", event => {
+    if (event.code === "ArrowLeft" || event.code === "KeyA") { event.preventDefault(); move(-1); }
+    if (event.code === "ArrowRight" || event.code === "KeyD") { event.preventDefault(); move(1); }
+    if (event.code === "Space" && state.mode !== "ready" && state.mode !== "over") { event.preventDefault(); pauseRun(); }
+  });
+  let touchStartX = null;
+  track.addEventListener("pointerdown", event => { touchStartX = event.clientX; });
+  track.addEventListener("pointerup", event => {
+    if (touchStartX === null) return;
+    const dx = event.clientX - touchStartX;
+    if (Math.abs(dx) > 24) move(dx < 0 ? -1 : 1);
+    touchStartX = null;
+  });
+  track.addEventListener("pointercancel", () => { touchStartX = null; });
+  renderPlayer();
+  renderHud();
+}
+</script>
+</body>
+</html>
